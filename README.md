@@ -6,6 +6,10 @@ This plugin provides the ability to speech recognition and synthesis (over iFlyt
 
 	cordova plugin add com.rjfun.cordova.plugin.iflyspeech
 
+Or,
+	
+	cordova plugin add https://github.com/floatinghotpot/cordova-plugin-iflyspeech.git
+
 Attentioin: You need apply an App Id and SDK from http://open.voicecloud.cn/.
 
 Please replace:
