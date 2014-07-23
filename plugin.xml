@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<plugin id="com.rjfun.cordova.plugin.iflyspeech" version="0.0.2" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+    <name>Speech</name>
+    <description>Cordova plugin to support mobile speech recognizer and synthesizer with iFlyTek voice cloud service</description>
+    <author>Lu Huiguo / Liming Xie</author>
+    <license>Apache 2.0</license>
+    <keywords>cordova,speech,recognizer,synthesizer,iflytek</keywords>
+    <repo>https://github.com/floatinghotpot/cordova-plugin-speech.git</repo>
+    <issue>https://github.com/floatinghotpot/cordova-plugin-speech/issues</issue>
+
+    <engines>
+        <engine name="cordova" version=">=3.3.0" />
+    </engines>
+
+    <js-module src="www/speech.js" name="speech">
+        <clobbers target="navigator.speech" />
+    </js-module>
+
+    <platform name="android">
+        <config-file parent="/*" target="res/xml/config.xml">
+            <feature name="Speech">
+                <param name="android-package" value="com.rjfun.cordova.plugin.Speech" />
+            </feature>
+        </config-file>
+
+        <config-file target="AndroidManifest.xml" parent="/*">
+            <uses-permission android:name="android.permission.RECORD_AUDIO" />
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+            <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+        </config-file>
+
+        <source-file src="src/android/Speech.java" target-dir="src/com.rjfun/cordova/plugin" />
+        <source-file src="src/android/libs/armeabi/libmsc.so" target-dir="libs/armeabi" />
+        <source-file src="src/android/libs/armeabi-v7a/libmsc.so" target-dir="libs/armeabi-v7a" />
+        <source-file src="src/android/libs/mips/libmsc.so" target-dir="libs/mips" />
+        <source-file src="src/android/libs/x86/libmsc.so" target-dir="libs/x86" />
+        <source-file src="src/android/libs/Msc.jar" target-dir="libs" />
+    </platform>
+    
+    <platform name="ios">
+        <config-file parent="/*" target="config.xml">
+            <feature name="Speech">
+                <param name="ios-package" value="CDVSpeech" />
+            </feature>
+        </config-file>
+
+        <header-file src="src/ios/CDVSpeech.h" />
+        <source-file src="src/ios/CDVSpeech.m" />
+        <framework src="AVFoundation.framework" />
+        <framework src="AddressBook.framework" />
+        <framework src="AudioToolbox.framework" />
+        <framework src="SystemConfiguration.framework" />
+        <framework src="QuartzCore.framework" />
+
+        <framework src="src/ios/iflyMSC.framework" custom="true" />
+    </platform>
+</plugin>
