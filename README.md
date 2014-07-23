@@ -4,11 +4,9 @@ This plugin provides the ability to speech recognition and synthesis (over iFlyt
 
 ## Installation
 
-cordova plugin add com.rjfun.cordova.plugin.iflyspeech
+	cordova plugin add com.rjfun.cordova.plugin.iflyspeech
 
-## Attention ##
-
-You need apply an App Id and SDK from http://open.voicecloud.cn/.
+Attentioin: You need apply an App Id and SDK from http://open.voicecloud.cn/.
 
 Please replace:
 - the iFlytek SDK files(ios/iflyMSC.framework and android/libs) with the version for your app.
@@ -54,17 +52,17 @@ Please replace:
     
 ## Quick Start ##
 
-Copy the example under test/ to your www/
+Copy the example code under test/ to your www/, and build to play.
 
-   cordova create testspeech com.rjfun.testspeech TestSpeech
-   cd testspeech
-   cordova platform add android
-   cordova platform add ios
-   cordova plugin add https://github.com/floatinghotpot/cordova-plugin-iflyspeech.git
-   rm -r www/*
-   cp -r plugins/com.rjfun.cordova.plugin.iflyspeech/test/* www/
-   cordova prepare; cordova run android; cordova run ios;
-   // or import the project into Xcode or eclipse
+	cordova create testspeech com.rjfun.testspeech TestSpeech
+	cd testspeech
+	cordova platform add android
+	cordova platform add ios
+	cordova plugin add https://github.com/floatinghotpot/cordova-plugin-iflyspeech.git
+	rm -r www/*
+	cp -r plugins/com.rjfun.cordova.plugin.iflyspeech/test/* www/
+	cordova prepare; cordova run android; cordova run ios;
+	// or import the project into Xcode or eclipse
 
 ## Example Code ##
 ```javascript
