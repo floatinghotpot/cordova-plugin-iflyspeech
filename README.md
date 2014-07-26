@@ -23,20 +23,22 @@ Please replace:
 
 ## Javascript APIs ##
 
-    speech.addEventListener( event_name, your_callback );
-    speech.removeEventListener( event_name );
+    addEventListener( event_name, your_callback );
+    removeEventListener( event_name );
 
-    speech.startListening();
-    speech.stopListening();
-    speech.cancelListening();
-    
-    speech.startSpeaking( what_to_say, options );
-    speech.pauseSpeaking();
-    speech.resumeSpeaking();
-    speech.stopSpeaking();
-    
-    speech.onSpeak( your_callback_func );
+    syncContact(success, fail);
+    updateContact( names, success, fail);
+    updateUserWord( talbe_name, words, success, fail);
 
+    startListening(options, callback);
+    stopListening();
+    cancelListening();
+    
+    startSpeaking( what_to_say, options );
+    pauseSpeaking();
+    resumeSpeaking();
+    stopSpeaking();
+    
 ## Events ##
     
     SpeechBegin
@@ -74,38 +76,22 @@ function onLoad() {
     document.addEventListener("deviceready", onDeviceReady, false);
 }
 function onDeviceReady() {
-	navigator.speech.onSpeak( function(str) {
-		// this is what the device hear and understand
-	    $('textarea#read').val( str );
-	    $('div#status').html( str );
-	});
-	
-	// enumrate the available voice names to a drop down list.
-	var s = navigator.speech.voice_names;
-	for( var v in s ) {
-	    $('select#voice_name').append( new Option(s[v], v) );
-	}
-	
 	$('div#status').html( 'speech engine ready' );
 }
 function startReading() {
 	var text = $('textarea#read').val();
-
-	var speakers = $('select#voice_name')[0];
-	var speaker = speakers.options[ speakers.selectedIndex ];
-	var speaker_name = speaker.innerHTML;
-	var options = {voice_name: speaker.value};
-	$('div#status').html( speaker_name + '：' + text );
-
-	navigator.speech.startSpeaking( text, options );
+	navigator.speech.startSpeaking( text, {voice_name: 'xiaoyan'} );
 }
 function stopReading() {
 	navigator.speech.stopSpeaking();
 }
 function startListening() {
-	$('div#status').html( 'start listening, please speak.' );
+	$('div#status').html( 'Listening, please speak.' );
 
-	navigator.speech.startListening();
+	navigator.speech.startListening({language:'zh_cn', accent:'mandarin'} function(str) {
+            // this is what the device hear and understand
+            $('textarea#read').val( str );
+        });
 }
 function stopListening() {
 	navigator.speech.stopListening();
@@ -114,6 +100,7 @@ function stopListening() {
 
 ## Credit ##
 
-This plugin code was based on project of Lu Huiguo. His code is very good but not tuned to work. It seems that he is not very active, so I start a new repository.
+This plugin code was based on project of Lu Huiguo. His code is very good but not tuned to work. 
+It seems that he is not very active, so I start a new repository.
 
  

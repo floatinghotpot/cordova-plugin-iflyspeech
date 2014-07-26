@@ -4,6 +4,8 @@ var cordova = require('cordova'),
 
 var Speech = function() {
     this.channels = {
+        'SyncContact': channel.create('SyncContact'),
+        'UpdateUserWord': channel.create('UpdateUserWord'),
         'SpeechError': channel.create('SpeechError'),
         'SpeechResults': channel.create('SpeechResults'),
         'VolumeChanged': channel.create('VolumeChanged'),
@@ -19,24 +21,24 @@ var Speech = function() {
         'BufferProgress': channel.create('BufferProgress')
     };
     this.voice_names = {
-        'xiaoyan' : '中国小燕',
-        'xiaoyu' : '中国小宇',
-        'Catherine' : '美国Catherine',
-        'henry' : '美国Henry',
-        'vimary' : '英国Mary',
-        'vixy' : '中国小研',
-        'vixq' : '中国小琪',
-        'vixf' : '中国小峰',
+        'xiaoyan' : '小燕',
+        'xiaoyu' : '小宇',
+        'vixy' : '小研',
+        'vixq' : '小琪',
+        'vixf' : '小峰',
         'vixm' : '香港小梅',
         'vixl' : '台湾小莉',
-        'vixr' : '四川小蓉',
+        'vixr' : '四川妹纸',
         'vixyun' : '东北小芸',
         'vixk' : '河南小坤',
         'vixqa' : '湖南小强',
         'vixying' : '陕西小莹',
-        'vixx' : '男孩小新',
-        'vinn' : '女孩楠楠',
-        'vils' : '大爷老孙',
+        'vixx' : '蜡笔小新',
+        'vinn' : '楠楠',
+        'vils' : '孙大爷',
+        'Catherine' : '美国Catherine',
+        'henry' : '美国Henry',
+        'vimary' : '英国Mary',
         'Mariane' : '法国Mariane',
         'Guli' : '维族Guli',
         'Allabent' : '俄国Allabent',
@@ -68,9 +70,6 @@ Speech.prototype = {
         }
     },
 
-    onSpeak : function( func ) {
-    	this.onspeakcallback = func;
-    },
     login: function() {
     	// closure variable for local function to use
     	var speech = this;
@@ -90,7 +89,8 @@ Speech.prototype = {
                 speech.msg += word;
             }
             if(data.ls == true) {
-            	if(typeof speech.onspeakcallback === 'funciton') {
+		console.log( speech.msg );
+            	if(typeof speech.onspeakcallback === 'function') {
             		speech.onspeakcallback( speech.msg );
             	}
             }
@@ -98,8 +98,31 @@ Speech.prototype = {
         this.addEventListener('SpeechResults', parseResults );
 
     },
+    
+    syncContact: function(success, fail) {
+    	this.addEventListener('SyncContact', function(e){
+    		if(e.code == 0) {
+    			if(typeof success === 'function') success();
+    		} else {
+    			if(typeof fail === 'function') fail();
+    		}
+    	});
+    	exec(null, null, 'Speech', 'syncContact', []);
+    },
+    
+    updateContact: function(names, success, fail) {
+    	var contents = names.join('\n');
+    	exec(success, fail, 'Speech', 'updateContact', [contents]);
+    },
+    
+    updateUserWord: function(talbe_name, words, success, fail) {
+    	var data = { userword: [{ name:talbe_name, words:words }] };
+    	var contents = JSON.stringify( data );
+    	exec(success, fail, 'Speech', 'updateUserWord', [contents]);
+    },
 
-    startListening: function(options) {
+    startListening: function(options, func) {
+    	this.onspeakcallback = func;
         exec(null, null, 'Speech', 'startListening', [options]);
     },
 

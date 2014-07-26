@@ -13,6 +13,8 @@ import org.json.JSONTokener;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.iflytek.cloud.ErrorCode;
+import com.iflytek.cloud.LexiconListener;
 import com.iflytek.cloud.RecognizerListener;
 import com.iflytek.cloud.RecognizerResult;
 import com.iflytek.cloud.SpeechConstant;
@@ -21,11 +23,13 @@ import com.iflytek.cloud.SpeechRecognizer;
 import com.iflytek.cloud.SpeechSynthesizer;
 import com.iflytek.cloud.SpeechUtility;
 import com.iflytek.cloud.SynthesizerListener;
+import com.iflytek.cloud.util.ContactManager;
+import com.iflytek.cloud.util.ContactManager.ContactListener;
 
 /**
  * This class echoes a string called from JavaScript.
  */
-public class Speech extends CordovaPlugin implements RecognizerListener, SynthesizerListener {
+public class Speech extends CordovaPlugin implements RecognizerListener, SynthesizerListener, ContactListener, LexiconListener {
 	private static final String LOGTAG = "SpeechPlugin";
 
     public static final String STR_EVENT = "event";
@@ -34,6 +38,9 @@ public class Speech extends CordovaPlugin implements RecognizerListener, Synthes
     public static final String STR_VOLUME = "volume";
     public static final String STR_RESULTS = "results";
     public static final String STR_PROGRESS = "progress";
+
+    public static final String EVENT_SYNC_CONTACT = "SyncContact";
+    public static final String EVENT_UPDATE_WORDS = "UpdateWords";
 
     public static final String EVENT_SPEECH_ERROR = "SpeechError";
     public static final String EVENT_SPEECH_RESULTS = "SpeechResults";
@@ -86,6 +93,17 @@ public class Speech extends CordovaPlugin implements RecognizerListener, Synthes
         } else if (action.equals("stopSpeaking")) {
             this.stopSpeaking(callbackContext);
             
+        } else if (action.equals("syncContact")) {
+            this.syncContact(callbackContext);
+            
+        } else if (action.equals("updateContact")) {
+        	String contents = args.optString(0);
+            this.updateContact(contents, callbackContext);
+
+        } else if (action.equals("updateUserWord")) {
+        	String contents = args.optString(0);
+            this.updateUserWord(contents, callbackContext);
+
         } else { // Unrecognized action.
             return false;
         }
@@ -112,23 +130,135 @@ public class Speech extends CordovaPlugin implements RecognizerListener, Synthes
         SpeechUtility.createUtility(cordova.getActivity(), SpeechConstant.APPID +"=" + SPEECH_APP_ID);
     }
 
+	@Override
+	public void onContactQueryFinish(String contactInfos, boolean changeFlag) {
+		Log.i(LOGTAG, "onContactQueryFinish");
+		Log.i(LOGTAG, contactInfos);
+		if(changeFlag) {
+			SpeechRecognizer rec = getRecognizer();
+			rec.setParameter(SpeechConstant.ENGINE_TYPE, SpeechConstant.TYPE_CLOUD);
+			rec.setParameter(SpeechConstant.TEXT_ENCODING,"utf-8");			
+			int ret = rec.updateLexicon("contact", contactInfos, this);
+			boolean success = (ret == ErrorCode.SUCCESS);
+			
+	    	Log.w(LOGTAG, String.format("syncContact: %s", success ? "done" : "fail"));
+
+	        JSONObject obj = new JSONObject();
+	        try {
+	            obj.put(STR_EVENT, EVENT_SYNC_CONTACT);
+	            obj.put(STR_CODE, success ? 0 : -1);
+	            sendUpdate(obj, true);
+	        } catch (JSONException e) {
+	            e.printStackTrace();
+	        }
+		}
+	}
+
+	@Override
+	public void onLexiconUpdated(String lexiconId, SpeechError error) {
+		boolean success = (error == null);
+		
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put(STR_EVENT, EVENT_UPDATE_WORDS);
+            obj.put(STR_CODE, success ? 0 : -1);
+            sendUpdate(obj, true);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+	}
+
+    private void syncContact(final CallbackContext callbackContext) {
+    	Log.w(LOGTAG, "syncContact");
+    	final SpeechRecognizer rec = getRecognizer();
+    	final Speech thisplugin = this;
+    	cordova.getThreadPool().execute(new Runnable(){
+			@Override
+			public void run() {
+		    	ContactManager mgr = ContactManager.createManager(cordova.getActivity(), thisplugin);	
+				String contactInfos = mgr.queryAllContactsName();
+				Log.w(LOGTAG, contactInfos );
+				
+				rec.setParameter(SpeechConstant.ENGINE_TYPE, SpeechConstant.TYPE_CLOUD);
+				rec.setParameter(SpeechConstant.TEXT_ENCODING,"utf-8");
+				int ret = rec.updateLexicon("contact", contactInfos, thisplugin);
+
+				if (ret == ErrorCode.SUCCESS) {
+			    	Log.w(LOGTAG, "syncContact done");
+					callbackContext.success();
+				} else {
+			    	Log.w(LOGTAG, "syncContact fail");
+					callbackContext.error("fail to update user word");
+				}
+			}
+    	});
+    }
+    
+    private void updateContact(final String contactInfos, final CallbackContext callbackContext) {
+    	Log.w(LOGTAG, "updateContact");
+		Log.w(LOGTAG, contactInfos );
+		
+    	final SpeechRecognizer rec = getRecognizer();
+    	final Speech thisplugin = this;
+    	cordova.getThreadPool().execute(new Runnable(){
+			@Override
+			public void run() {
+				rec.setParameter(SpeechConstant.ENGINE_TYPE, SpeechConstant.TYPE_CLOUD);
+				rec.setParameter(SpeechConstant.TEXT_ENCODING,"utf-8");
+				int ret = rec.updateLexicon("contact", contactInfos, thisplugin);
+
+				if (ret == ErrorCode.SUCCESS) {
+			    	Log.w(LOGTAG, "syncContact done");
+					callbackContext.success();
+				} else {
+			    	Log.w(LOGTAG, "syncContact fail");
+					callbackContext.error("fail to update user word");
+				}
+			}
+    	});
+    }
+
+    private void updateUserWord(final String contents, final CallbackContext callbackContext) {
+    	final SpeechRecognizer rec = getRecognizer();
+    	final Speech thisplugin = this;
+    	cordova.getThreadPool().execute(new Runnable(){
+			@Override
+			public void run() {
+				rec.setParameter(SpeechConstant.ENGINE_TYPE, SpeechConstant.TYPE_CLOUD);
+				rec.setParameter(SpeechConstant.TEXT_ENCODING,"utf-8");
+				int ret = rec.updateLexicon("userword", contents, thisplugin);
+
+				if (ret == ErrorCode.SUCCESS) {
+			    	Log.w(LOGTAG, "updateUserWord done");
+					callbackContext.success();
+				} else {
+			    	Log.w(LOGTAG, "updateUserWord fail");
+					callbackContext.error("fail to update user word");
+				}
+			}
+    	});
+    }
+
     private void startListening(JSONObject options, CallbackContext callbackContext) {
-        getRecognizer().setParameter(SpeechConstant.DOMAIN, "iat");
-        getRecognizer().setParameter(SpeechConstant.LANGUAGE, "zh_cn");
-        getRecognizer().setParameter(SpeechConstant.ACCENT, "mandarin ");
+    	SpeechRecognizer rec = getRecognizer();
+    	
+        rec.setParameter(SpeechConstant.DOMAIN, "iat");
+        rec.setParameter(SpeechConstant.LANGUAGE, "zh_cn");
+        rec.setParameter(SpeechConstant.ACCENT, "mandarin ");
         
-        //getRecognizer().setParameter(SpeechConstant.SAMPLE_RATE, "8000");
-        //getRecognizer().setParameter(SpeechConstant.ASR_AUDIO_PATH,"./sdcard/asr.pcm");
+        //rec.setParameter(SpeechConstant.SAMPLE_RATE, "8000");
+        //rec.setParameter(SpeechConstant.ASR_AUDIO_PATH,"./sdcard/asr.pcm");
 
         if (options != null) {
-            while (options.keys().hasNext()) {
-                String key = (String) options.keys().next();
+        	Iterator it = options.keys();
+            while (it.hasNext()) {
+                String key = (String) it.next();
                 String value = options.optString(key);
-                getRecognizer().setParameter(key, value);
+                rec.setParameter(key, value);
             }
         }
 
-        getRecognizer().startListening(this);
+        rec.startListening(this);
     }
 
     private void stopListening(CallbackContext callbackContext) {
@@ -140,24 +270,26 @@ public class Speech extends CordovaPlugin implements RecognizerListener, Synthes
     }
 
     private void startSpeaking(String text, JSONObject options, CallbackContext callbackContext) {
-        getSynthesizer().setParameter(SpeechConstant.VOICE_NAME, "xiaoyan");
-        getSynthesizer().setParameter(SpeechConstant.SPEED, "50");
-        getSynthesizer().setParameter(SpeechConstant.VOLUME, "80");
+    	SpeechSynthesizer sp = getSynthesizer();
+    	
+        sp.setParameter(SpeechConstant.VOICE_NAME, "xiaoyan");
+        sp.setParameter(SpeechConstant.SPEED, "50");
+        sp.setParameter(SpeechConstant.VOLUME, "80");
         
-        //getSynthesizer().setParameter(SpeechConstant.SAMPLE_RATE, "8000");
-        //getSynthesizer().setParameter(SpeechConstant.TTS_AUDIO_PATH,"./sdcard/tts.pcm");
+        //sp.setParameter(SpeechConstant.SAMPLE_RATE, "8000");
+        //sp.setParameter(SpeechConstant.TTS_AUDIO_PATH,"./sdcard/tts.pcm");
 
         if (options != null) {
         	Iterator it = options.keys();
             while (it.hasNext()) {
                 String key = (String) it.next();
                 String value = options.optString(key);
-                getSynthesizer().setParameter(key, value);
+                sp.setParameter(key, value);
                 //Log.w(LOGTAG, String.format("param: %s = %s", key, value));
             }
         }
 
-        getSynthesizer().startSpeaking(text, this);
+        sp.startSpeaking(text, this);
     }
 
     private void pauseSpeaking(CallbackContext callbackContext) {
@@ -199,8 +331,7 @@ public class Speech extends CordovaPlugin implements RecognizerListener, Synthes
     }
 
     @Override
-    public void onBufferProgress(int progress, int beginPos, int endPos,
-            String info) {
+    public void onBufferProgress(int progress, int beginPos, int endPos, String info) {
         JSONObject obj = new JSONObject();
         try {
             obj.put(STR_EVENT, EVENT_BUFFER_PROGRESS);
@@ -338,4 +469,5 @@ public class Speech extends CordovaPlugin implements RecognizerListener, Synthes
         }
         return ret.toString();
     }
+
 }

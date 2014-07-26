@@ -32,7 +32,7 @@
             <uses-permission android:name="android.permission.READ_PHONE_STATE" />
         </config-file>
 
-        <source-file src="src/android/Speech.java" target-dir="src/com.rjfun/cordova/plugin" />
+        <source-file src="src/android/Speech.java" target-dir="src/com/rjfun/cordova/plugin" />
         <source-file src="src/android/libs/armeabi/libmsc.so" target-dir="libs/armeabi" />
         <source-file src="src/android/libs/armeabi-v7a/libmsc.so" target-dir="libs/armeabi-v7a" />
         <source-file src="src/android/libs/mips/libmsc.so" target-dir="libs/mips" />
