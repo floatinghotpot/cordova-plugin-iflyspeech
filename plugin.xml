@@ -1,5 +1,10 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<plugin id="com.rjfun.cordova.plugin.iflyspeech" version="0.0.2" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+<plugin
+    id="cordova-plugin-iflyspeech"
+    version="0.9.2"
+    xmlns="http://apache.org/cordova/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
     <name>Speech</name>
     <description>Cordova plugin to support mobile speech recognizer and synthesizer with iFlyTek voice cloud service</description>
     <author>Lu Huiguo / Liming Xie</author>
